@@ -1,56 +1,94 @@
 import Notiflix from 'notiflix';
-document.addEventListener('DOMContentLoaded', async () => {
-  const breedSelect = new SlimSelect({
-    select: '#breed-select',
-    placeholder: 'Оберіть породу',
+const breedSelect = document.querySelector('.breed-select');
+const loader = document.querySelector('.loader');
+const catInfo = document.querySelector('.cat-info');
+
+import { fetchBreeds, fetchCatByBreed } from './cat-api.js';
+
+breedSelect.style.marginBottom = '60px';
+
+loader.style.display = 'block';
+
+fetchBreeds()
+  .then(breeds => {
+    loader.style.display = 'none';
+    breedSelect.classList.remove('is-hidden');
+
+    for (let i = 0; i < breeds.length; i++) {
+      let option = document.createElement('option');
+      option.value = breeds[i].id;
+      option.innerHTML = breeds[i].name;
+      breedSelect.appendChild(option);
+    }
+  })
+  .catch(error => {
+    loader.style.display = 'none';
+    breedSelect.classList.add('is-hidden');
+
+    Notiflix.Notify.failure(
+      'Oops! Something went wrong! Try reloading the page!'
+    );
   });
 
-  const loader = document.getElementById('loader');
-  const error = document.getElementById('error');
-  const catInfo = document.getElementById('cat-info');
+breedSelect.addEventListener('change', function () {
+  const selectedBreedId = this.value;
+  catInfo.innerHTML = '';
 
-  try {
-    // Завантаження порід
-    const breeds = await fetchBreeds();
-    const breedOptions = breeds.map(breed => ({
-      value: breed.id,
-      text: breed.name,
-    }));
-    breedSelect.setData(breedOptions);
+  loader.style.display = 'block';
 
-    // Вибір породи
-    breedSelect.on('change', async () => {
-      const selectedBreedId = breedSelect.selected();
-      loader.style.display = 'block';
-      error.style.display = 'none';
-      catInfo.innerHTML = '';
+  fetchCatByBreed(selectedBreedId)
+    .then(breeds => {
+      loader.style.display = 'none';
+      breedSelect.classList.remove('is-hidden');
 
-      try {
-        // Отримання інформації про кота за породою
-        const catData = await fetchCatByBreed(selectedBreedId);
-        const catImage = document.createElement('img');
-        catImage.src = catData[0].url;
+      if (
+        Array.isArray(breeds) &&
+        breeds.length > 0 &&
+        breeds[0].breeds &&
+        breeds[0].breeds.length > 0
+      ) {
+        const catData = breeds[0];
 
-        // Отримання іншої інформації про кота
-        const breedInfo = breeds.find(breed => breed.id === selectedBreedId);
-        const catDescription = document.createElement('p');
-        catDescription.textContent = `Назва породи: ${breedInfo.name}\nОпис: ${breedInfo.description}\nТемперамент: ${breedInfo.temperament}`;
+        // Create image box
+        const imgBox = `
+        <div style="max-width: 400px; max-height: 400px;">
+          <img src="${catData.url}" style="border: 1px solid black; width: 100%; height: auto;">
+        </div>
+      `;
 
-        // Відображення інформації про кота
-        catInfo.appendChild(catImage);
-        catInfo.appendChild(catDescription);
-      } catch (e) {
-        // Обробка помилки під час отримання інформації про кота
+        // Create text box
+        const textBox = `
+        <div>
+          <h2>${catData.breeds[0].name}</h2>
+          <p style="width: 400px;">${catData.breeds[0].description}</p>
+          <p><span style="font-weight: 700;">Temperament: </span>${catData.breeds[0].temperament}</p>
+        </div>
+      `;
+
+        // Display cat info
+        catInfo.style.display = 'flex';
+        catInfo.style.gap = '40px';
+        catInfo.innerHTML = imgBox + textBox;
+      } else {
         loader.style.display = 'none';
-        error.style.display = 'block';
-      } finally {
-        // Приховання завантажувача після завершення запиту
-        loader.style.display = 'none';
+
+        Notiflix.Notify.failure(
+          'Oops! Something went wrong! Try reloading the page!'
+        );
+        breedSelect.classList.add('is-hidden');
+        console.error(
+          'Incomplete or no data received for the selected breed:',
+          breeds
+        );
       }
+    })
+    .catch(error => {
+      breedSelect.classList.add('is-hidden');
+      Notiflix.Notify.failure(
+        'Oops! Something went wrong! Try reloading the page!'
+      );
+    })
+    .finally(() => {
+      loader.style.display = 'none';
     });
-  } catch (e) {
-    // Обробка помилки під час отримання списку порід
-    loader.style.display = 'none';
-    error.style.display = 'block';
-  }
 });
