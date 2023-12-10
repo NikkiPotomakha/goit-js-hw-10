@@ -27,6 +27,7 @@ p {
 }
 .breed-select {
   display: none;
+  margin-bottom: 30px;
 }
 .loader {
   width: 48px;
