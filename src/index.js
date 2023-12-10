@@ -32,15 +32,13 @@ fetchBreeds()
       select.appendChild(option);
       select.style.display = 'block';
     });
-    const slim = new SlimSelect({
-      select: 'breed-select', // Use the correct selector for your breed-select element
+    new SlimSelect({
+      select: '.breed-select',
       settings: {
-        contentPosition: 'absolute', // 'absolute' or 'relative'
-        contentLocation: document.getElementById('local'), // Replace with your actual content location element ID
+        contentLocation: document.getElementById('local'),
       },
     });
   })
-
   .catch(() => {
     setErrorState(true);
     select.style.display = 'none';
