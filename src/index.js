@@ -1,6 +1,7 @@
 import { fetchBreeds, fetchCatByBreed } from './cat-api.js';
 
 import SlimSelect from 'slim-select';
+import 'slim-select/dist/slimselect.css';
 
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
@@ -30,6 +31,13 @@ fetchBreeds()
       option.textContent = breed.name;
       select.appendChild(option);
       select.style.display = 'block';
+    });
+    const slim = new SlimSelect({
+      select: 'breed-select', // Use the correct selector for your breed-select element
+      settings: {
+        contentPosition: 'absolute', // 'absolute' or 'relative'
+        contentLocation: document.getElementById('local'), // Replace with your actual content location element ID
+      },
     });
   })
 
