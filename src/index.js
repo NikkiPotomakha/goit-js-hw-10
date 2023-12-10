@@ -1,14 +1,13 @@
-import { fetchBreeds, fetchCatByBreed } from './cat-api.js';
-
+import Notiflix from 'notiflix';
 import SlimSelect from 'slim-select';
 import 'slim-select/dist/slimselect.css';
-
-import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
 const select = document.querySelector('.breed-select');
 const loader = document.querySelector('.loader');
 const errorMessage = document.querySelector('.error');
 const info = document.querySelector('.cat-info');
+
+import { fetchBreeds, fetchCatByBreed } from './cat-api.js';
 
 function setLoadingState(isLoading) {
   loader.style.display = isLoading ? 'block' : 'none';
@@ -33,12 +32,10 @@ fetchBreeds()
       select.style.display = 'block';
     });
     new SlimSelect({
-      select: '.breed-select',
-      settings: {
-        contentLocation: document.getElementById('local'),
-      },
+      select: select,
     });
   })
+
   .catch(() => {
     setErrorState(true);
     select.style.display = 'none';
