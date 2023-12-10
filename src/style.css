@@ -1,9 +1,11 @@
 body {
   background-color: #eed9d9;
+  font-family: 'Kanit', sans-serif;
 }
 
 p {
   font-size: 18px;
+  font-family: 'Kanit', sans-serif;
 }
 
 .cat-info {
