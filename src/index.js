@@ -4,80 +4,65 @@ import 'slim-select/dist/slimselect.css';
 
 const select = document.querySelector('.breed-select');
 const loader = document.querySelector('.loader');
-const errorMessage = document.querySelector('.error');
-const info = document.querySelector('.cat-info');
+const catInfo = document.querySelector('.cat-info');
 
 import { fetchBreeds, fetchCatByBreed } from './cat-api.js';
 
-function setLoadingState(isLoading) {
-  loader.style.display = isLoading ? 'block' : 'none';
-}
-function setErrorState(hasError) {
-  errorMessage.style.display = hasError ? 'block' : 'none';
-  select.style.display = hasError ? 'none' : 'block';
-}
-
-const defaultOption = document.createElement('option');
-defaultOption.textContent = 'Choose a cat';
-defaultOption.value = '';
-select.appendChild(defaultOption);
+select.style.visibility = 'hidden';
 
 fetchBreeds()
-  .then(data => {
-    data.forEach(breed => {
-      const option = document.createElement('option');
-      option.value = breed.id;
-      option.textContent = breed.name;
-      select.appendChild(option);
-      select.style.display = 'block';
-    });
+  .then(breeds => {
+    select.style.visibility = 'visible';
+
+    loader.style.display = 'none';
+
+    const cats = breeds
+      .map(
+        breed => `
+    <option value="${breed.id}">${breed.name}</optiom>
+    `
+      )
+      .join('');
+
+    select.insertAdjacentHTML('beforeend', cats);
     new SlimSelect({
       select: select,
     });
   })
-
-  .catch(() => {
-    setErrorState(true);
-    select.style.display = 'none';
-  })
-  .finally(() => {
-    setLoadingState(false);
+  .catch(error => {
+    loader.style.display = 'none';
+    // showError();
+    Notiflix.Notify.failure(
+      'Oops! Something went wrong! Try reloading the page!'
+    );
   });
 
-select.addEventListener('change', onSelectBreed);
-function onSelectBreed(event) {
-  setErrorState(false);
-  setLoadingState(true);
-  info.innerHTML = '';
-  const breedId = event.target.value;
-  fetchCatByBreed(breedId)
-    .then(data => {
-      const { url, breeds } = data[0];
-      const markup = `
-        <div class="box-img">
-        <img src="${url}" alt="${breeds[0].name}" width="400"/>
-        </div><div class="box">
-        <h1>${breeds[0].name}</h1>
-        <p>${breeds[0].description}</p>
-        <p>
-        <b>Temperament:</b>
-        ${breeds[0].temperament}</p>
-        </div>`;
-      info.insertAdjacentHTML('beforeend', markup);
+select.addEventListener('change', function () {
+  const selectedBreedId = this.value;
+  catInfo.innerHTML = '';
+
+  loader.style.display = 'block';
+
+  fetchCatByBreed(selectedBreedId)
+    .then(breeds => {
+      loader.style.display = 'none';
+
+      const catData = breeds[0];
+      catInfo.innerHTML = `
+        <div><img src="${catData.url}" border ="1px solid black" width ="450"/></div>
+        <div>
+        <h2>${catData.breeds[0].name}</h2>
+        <p>${catData.breeds[0].description}</p>
+        <p>Temperament: ${catData.breeds[0].temperament}</p>
+        </div>
+        `;
+
+      catInfo.style.display = 'flex';
+      catInfo.style.gap = '20px';
     })
-    .catch(onFetchError)
-    .finally(() => {
-      setLoadingState(false);
-      select.style.display = 'block';
+    .catch(error => {
+      Notiflix.Notify.failure(
+        'Oops! Something went wrong! Try reloading the page!'
+      );
     });
-}
-
-function onFetchError() {
-  setLoadingState(true);
-  Notify.failure(errorMessage.textContent, {
-    position: 'center-center',
-    timeout: 5000,
-    width: '400px',
-    fontSize: '24px',
-  });
-}
+});
